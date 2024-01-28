@@ -208,7 +208,15 @@ ggplot(ames_raw)+geom_point()+aes(x=`Lot Area`,y=SalePrice)+xlab("Lot size in sq
 
 If you look at this by the neighborhood it become obvious how in some places size matters more than others.
 ```{r,fig.width=9,fig.height=7,echo=show_code}
-ggplot(ames_raw)+geom_point(alpha=0.3)+aes(x=`Lot Area`,y=SalePrice,color=factor(Neighborhood))+xlab("Above grade (ground) living area square feet")+ylab("Sale Price")+geom_smooth(method="lm",se=FALSE)+scale_y_log10()+scale_x_log10()+ theme(legend.position = "none")+facet_wrap(~Neighborhood)
+ggplot(ames_raw)
++geom_point(alpha=0.3)+
+  aes(x=`Lot Area`,y=SalePrice,color=factor(Neighborhood))+
+  xlab("Above grade (ground) living area square feet")+
+  ylab("Sale Price")+
+  geom_smooth(method="lm",se=FALSE)+
+  scale_y_log10()+scale_x_log10()+ 
+  theme(legend.position = "none")+
+  facet_wrap(~Neighborhood)
 
 ```
 
@@ -291,7 +299,7 @@ Here are few rules:
 - You need to explain why you added each variable.
 
 ```{r,eval=FALSE,echo=show_code}
-lmfit_2008<- lm(log(SalePrice)~`Total Bsmt SF`+`Overall Cond`+`Year Built`+`Garage Area`+`Yr Sold`, data = ames_raw_2008)
+lmfit_2008<- lm(log(`SalePrice`) ~ `Year Remod/Add`+`Year Built`+`Lot Area`+`Garage Area` + `Gr Liv Area`+`Year Remod/Add`*`Year Built`, data = ames_raw_2008)
 ```
 
 When you decide on your model use the following to come up with your test loss.
@@ -307,14 +315,13 @@ Try to answer the following additional questions.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+summary(lmfit_2008)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+It's better than the null model. But the loss is still large.
 
 
 ~~~
@@ -322,33 +329,22 @@ Please write your answer in full sentences.
 - Should you include all the predictors? Why?
 
 
-Your code:
-```{r,echo=TRUE}
-#
-#
-```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
-
+No. It may make the model to complex and cause some overfitting problems
 
 ~~~
 
 - What interaction makes sense?  Does your model indicate signs of interaction?
 
 
-Your code:
-```{r,echo=TRUE}
-#
-#
-```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The interaction in my model does not make sense according to the p-value. My model does not indicate signs of interaction
 
 
 ~~~
@@ -358,14 +354,42 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+# Load necessary libraries
+library(ggplot2)
+
+response_variable <- log(ames_raw_2008$SalePrice)
+
+# List of predictors
+predictors <- c("Year Remod/Add", "Year Built", "Lot Area", "Garage Area", "Gr Liv Area")
+model1 <- lm(log(`SalePrice`) ~ `Year Remod/Add`^3+`Year Built`+`Lot Area`+`Garage Area` + `Gr Liv Area`+`Year Remod/Add`*`Year Built`, data = ames_raw_2008)
+summary(model1)
+pred1 <- exp(predict(model1,newdata=ames_raw_2009))
+loss1 <- calc_loss(pred1,ames_raw_2009$SalePrice)
+
+model2 <- lm(log(`SalePrice`) ~ `Year Remod/Add`+`Year Built`^3+`Lot Area`+`Garage Area` + `Gr Liv Area`+`Year Remod/Add`*`Year Built`, data = ames_raw_2008)
+summary(model2)
+pred2 <- exp(predict(model2,newdata=ames_raw_2009))
+loss2 <- calc_loss(pred2,ames_raw_2009$SalePrice)
+
+model3 <- lm(log(`SalePrice`) ~ `Year Remod/Add`+`Year Built`+`Lot Area`^3 +`Garage Area` + `Gr Liv Area`+`Year Remod/Add`*`Year Built`, data = ames_raw_2008)
+summary(model3)
+pred3 <- exp(predict(model3,newdata=ames_raw_2009))
+loss3 <- calc_loss(pred3,ames_raw_2009$SalePrice)
+
+model4 <- lm(log(`SalePrice`) ~ `Year Remod/Add`+`Year Built`+`Lot Area` +`Garage Area`^3 + `Gr Liv Area`+`Year Remod/Add`*`Year Built`, data = ames_raw_2008)
+summary(model4)
+pred4 <- exp(predict(model4,newdata=ames_raw_2009))
+loss4 <- calc_loss(pred4,ames_raw_2009$SalePrice)
+
+model5 <- lm(log(`SalePrice`) ~ `Year Remod/Add`+`Year Built`+`Lot Area` +`Garage Area` + `Gr Liv Area`^3+`Year Remod/Add`*`Year Built`, data = ames_raw_2008)
+summary(model5)
+pred5 <- exp(predict(model5,newdata=ames_raw_2009))
+loss5 <- calc_loss(pred5,ames_raw_2009$SalePrice)
 ```
 
 Your answer:
 
-~~~
-Please write your answer in full sentences.
+There does not show non-linear association in my model since the loss would not chance after cubed the predictor.
 
 
 ~~~
@@ -374,15 +398,16 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+price_dif <- log(ames_raw_2009$SalePrice) - pred_2009
+top_indices <- which(price_dif %in% head(sort(price_dif, decreasing = TRUE), 5))
+selected_rows <- ames_raw_2009[top_indices, ]
+selected_rows
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
-
+The top 5 overpriced houses are shown above.
 
 ~~~
 
@@ -390,14 +415,15 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+top_indices1 <- which(price_dif %in% head(sort(price_dif, decreasing = FALSE), 5))
+selected_rows1 <- ames_raw_2009[top_indices1, ]
+selected_rows1
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The top 5 most good deal houses are shown above.
 
 
 ~~~
@@ -410,15 +436,15 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+auto <- read.csv("Auto.csv")
+fit_auto <- lm(mpg ~ horsepower, data = auto)
+summary(fit_auto)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
-
+There is a relationship between predictor and the response.The Multiple R-squared value is 0.6059, indicating that approximately 60.59% of the variability in mpg can be explained by the predictor horsepower.The relationship between horsepower and mpg is negative. The predicted value of mpg with horsepower 98 is 24.46708, the 95% C.I. is [23.97308,24.96108].
 
 ~~~
 
@@ -438,25 +464,25 @@ iv. What is the predicted mpg associated with a horsepower of 98? What are the a
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+plot(auto$horsepower, auto$mpg, main = "Scatterplot of mpg against horsepower", 
+     xlab = "Horsepower", ylab = "MPG")
+
+# Adding the least squares regression line
+abline(fit_auto, col = "red")
 ```
 
-Your answer:
-
-~~~
-Please write your answer in full sentences.
-
-
-~~~
 
 
 (c) Use the `plot()` function to produce diagnostic plots of the least squares regression fit. Comment on any problems you see with the fit.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+ggplot(auto, aes(x = horsepower, y = mpg)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, col = "red") +
+  labs(title = "Scatterplot of mpg against horsepower",
+       x = "Horsepower",
+       y = "MPG")
 ```
 
 Your answer:
@@ -474,14 +500,17 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+library(lattice)
+auto1 <- auto[, -ncol(auto)]
+# Produce a scatterplot matrix
+pairs(auto1 )
+
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The plot matrix is shown above.
 
 
 ~~~
@@ -493,8 +522,8 @@ cor() which is qualitative.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+cor_matrix <- cor(auto1)
+cor_matrix
 ```
 
 Your answer:
@@ -512,14 +541,14 @@ the predictors. Use the summary() function to print the results.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+model_c <- lm(mpg ~ . - name, data = auto)
+summary(model_c)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+Yes, there is evidence of a relationship between the predictors and the response variable. Year, origin,weight is highly statistically significant.
 
 
 ~~~
@@ -535,14 +564,26 @@ iii. What does the coefficient for the year variable suggest?
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+
+# Residuals vs. Fitted
+plot(model_c, which = 1)
+
+# Normal Q-Q plot
+plot(model_c, which = 2)
+
+# Scale-Location plot
+plot(model_c, which = 3)
+
+# Residuals vs. Leverage
+plot(model_c, which = 5)
+
+
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+There are some outliers when fitted values are large. The leverage plot identify an observations with unusually high leverage.
 
 
 ~~~
@@ -551,20 +592,29 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+model_with_interaction <- lm(mpg ~ . - name + weight:year, data = auto)
+summary(model_with_interaction)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The weight:year interactions appear to be statistically significant. 
 
 
 ~~~
 
 
 (f) Try a few different transformations of the variables, such as $log(X)$, $\sqrt{X}$, $X^2$. Comment on your findings.
+```{r,echo=TRUE}
+model_log <- lm(mpg ~ log(weight) + log(horsepower) + log(displacement), data = auto)
+model_sqrt <- lm(mpg ~ sqrt(weight) + sqrt(horsepower) + sqrt(displacement), data = auto)
+model_sq <- lm(mpg ~ weight^2 + horsepower^2 + displacement^2, data = auto)
+
+summary(model_log)
+summary(model_sqrt)
+summary(model_sq)
+```
 
 
 This question should be answered using the Carseats data set.
@@ -572,7 +622,7 @@ This question should be answered using the Carseats data set.
 
 Your code:
 ```{r,echo=TRUE}
-#
+# I can't find dataset "Carseats".
 #
 ```
 
