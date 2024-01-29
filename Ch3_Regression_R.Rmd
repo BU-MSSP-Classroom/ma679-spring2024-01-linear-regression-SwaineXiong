@@ -622,46 +622,37 @@ This question should be answered using the Carseats data set.
 
 Your code:
 ```{r,echo=TRUE}
-# I can't find dataset "Carseats".
-#
+carseat <- read.csv("Carseats.csv")
+fit_carseat <- lm(Sales ~ Price + Urban + US, data = carseat)
+summary(fit_carseat)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+Urban shows not significant in this model.
 
 
 ~~~
 
 (b) Provide an interpretation of each coefficient in the model. Be careful—some of the variables in the model are qualitative!
 
-Your code:
-```{r,echo=TRUE}
-#
-#
-```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The intercept represents the estimated Sales when all predictor variables are zero. For every one-unit increase in the Price of the product, Sales are expected to decrease by approximately 0.054 units, holding other variables constant.The coefficient for 'UrbanYes' represents the change in Sales associated with the Urban variable being "Yes" compared to being "No", while holding other variables constant.The coefficient for 'USYes' represents the change in Sales associated with the US variable being "Yes" compared to being "No", while holding other variables constant. 
 
 
 ~~~
 
 (c) Write out the model in equation form, being careful to handle the qualitative variables properly.
 
-Your code:
-```{r,echo=TRUE}
-#
-#
-```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+Sales = 13.04 − 0.054 × Price − 0.022 × UrbanYes + 1.201 × USYes + ϵ
 
 
 ~~~
@@ -671,8 +662,7 @@ Please write your answer in full sentences.
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
-
+We reject the null hypothesis for the intercept, Price, and USYes, indicating that these variables are statistically significant in predicting Sales.
 
 ~~~
 
@@ -680,14 +670,14 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+smaller_model <- lm(Sales ~ Price + US, data = carseat)
+summary(smaller_model)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The model is shown above.
 
 
 ~~~
@@ -699,7 +689,7 @@ Please write your answer in full sentences.
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+Comparing the adjusted R-squared values, the smaller model has a slightly higher value (0.2354) compared to the previous model (0.2335), indicating a slightly better fit. The residual standard errors are very close, and the F-statistic for the smaller model is higher, suggesting that the smaller model explains the variability in Sales better.
 
 
 ~~~
@@ -708,25 +698,31 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+
+conf_intervals <- confint(smaller_model, level = 0.95)
+
+print(conf_intervals)
+
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+The C.I. for the coefficients are shown above.
 
 
 ~~~
 
 (h) Is there evidence of outliers or high leverage observations in the model from (e)?
+```{r}
+plot(smaller_model, which = 1)
+```
 
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+It's approximately around 0 so there are no evidence of outliers.
 
 
 ~~~
